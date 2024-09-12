@@ -1,0 +1,192 @@
+App.js
+
+import React from 'react';
+import { BrowserRouter, Route, Link } from 'react-router-dom';
+import Home from './Home';
+import BookList from './BookList';
+import AddBook from './AddBook';
+import EditBook from './EditBook';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <div>
+        <h1>Book Management Application</h1>
+        <ul>
+          <li><Link to="/">Home</Link></li>
+          <li><Link to="/books">Book List</Link></li>
+          <li><Link to="/add-book">Add Book</Link></li>
+        </ul>
+        <Route path="/" exact component={Home} />
+        <Route path="/books" component={BookList} />
+        <Route path="/add-book" component={AddBook} />
+        <Route path="/edit-book/:id" component={EditBook} />
+      </div>
+    </BrowserRouter>
+  );
+}
+
+export default App;
+______________________________________________________________________________________________________________
+Home.js
+
+import React from 'react';
+
+function Home() {
+  return (
+    <div>
+      <h2>Welcome to the Book Management Application!</h2>
+      <p>This application allows you to manage a list of books.</p>
+    </div>
+  );
+}
+
+export default Home;
+_________________________________________________________________________
+BookList.js
+
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+
+function BookList() {
+  const [books, setBooks] = useState([
+    { id: 1, title: 'Book 1', author: 'Author 1' },
+    { id: 2, title: 'Book 2', author: 'Author 2' },
+    { id: 3, title: 'Book 3', author: 'Author 3' },
+  ]);
+
+  useEffect(() => {
+    // Load books from local storage
+    const storedBooks = localStorage.getItem('books');
+    if (storedBooks) {
+      setBooks(JSON.parse(storedBooks));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Save books to local storage
+    localStorage.setItem('books', JSON.stringify(books));
+  }, [books]);
+
+  const handleDelete = (id) => {
+    setBooks(books.filter((book) => book.id !== id));
+  };
+
+  return (
+    <div>
+      <h2>Book List</h2>
+      <ul>
+        {books.map((book) => (
+          <li key={book.id}>
+            <span>{book.title} by {book.author}</span>
+            <Link to={`/edit-book/${book.id}`}>Edit</Link>
+            <button onClick={() => handleDelete(book.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default BookList;
+_____________________________________________________________________________________
+AddBook.js
+
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+
+function AddBook() {
+  const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const newBook = { id: Date.now(), title, author };
+    // Add book to local storage
+    const storedBooks = localStorage.getItem('books');
+    const books = storedBooks ? JSON.parse(storedBooks) : [];
+    books.push(newBook);
+    localStorage.setItem('books', JSON.stringify(books));
+    // Redirect to book list
+    window.location.href = '/books';
+  };
+
+  return (
+    <div>
+      <h2>Add Book</h2>
+      <form onSubmit={handleSubmit}>
+        <label>
+          Title:
+          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
+        </label>
+        <br />
+        <label>
+          Author:
+          <input type="text" value={author} onChange={(e) => setAuthor(e.target.value)} />
+        </label>
+        <br />
+        <button type="submit">Add Book</button>
+      </form>
+    </div>
+  );
+}
+
+export default AddBook;
+____________________________________________________________________________________________
+EditBook.js
+
+import React, { useState, useEffect } from 'react';
+import { Link, useParams } from 'react-router-dom';
+
+function EditBook() {
+  const { id } = useParams();
+  const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
+
+  useEffect(() => {
+    // Load book from local storage
+    const storedBooks = localStorage.getItem('books');
+    const books = storedBooks ? JSON.parse(storedBooks) : [];
+    const book = books.find((book) => book.id === parseInt(id));
+    if (book) {
+      setTitle(book.title);
+      setAuthor(book.author);
+    }
+  }, [id]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Update book in local storage
+    const storedBooks = localStorage.getItem('books');
+    const books = storedBooks ? JSON.parse(storedBooks) : [];
+    const index = books.findIndex((book) => book.id === parseInt(id));
+    if (index !== -1) {
+      books[index].title = title;
+      books[index].author = author;
+      localStorage.setItem('books', JSON.stringify(books));
+    }
+    // Redirect to book list
+    window.location.href = '/books';
+  };
+
+  return (
+    <div>
+      <h2>Edit Book</h2>
+      <form onSubmit={handleSubmit}>
+        <label>
+          Title:
+          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
+        </label>
+        <br />
+        <label>
+          Author:
+          <input type="text" value={author} onChange={(e) => setAuthor(e.target.value)} />
+        </label>
+        <br />
+        <button type="submit">Save Changes</button>
+      </form>
+    </div>
+  );
+}
+
+export default EditBook;
